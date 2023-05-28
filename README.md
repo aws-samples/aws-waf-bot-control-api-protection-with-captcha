@@ -19,18 +19,17 @@ It deploys a CloudFront distribution, associated to a WAF WebACL configured with
 
 The SPA HTML includes the Bot Control SDK, and a button that makes a call to an API. If WAF detects bad signals on the API call, the SPA triggers a CAPTCHA in the HTML. To test this behavior, change the user agent header in the browser.
 
-## Making changes to the solution to demonstrate cross domain configurations
+## Working SPA with cross domain
 
-Update the architecture:
-* Create a second CloudFront distribution that is pointing to API Gateway.
-* Change the SPA HTML to make request directly to the domain of the second CloudFront distribution
-* Dissociate the WAF WebACL from the first distribution, and associate it with the second one.
+Deploy the update the solution using this command line:
 
-Make the following changes to make it work:
-* Configure token domain of AWS WAF, to inlude the domain of the first CloudFront distribution
-* Change the HTML to include the WAF token in a specific header when making calles to the API (Cookies are not sent cross domains).
-* Configure CORS on APIG including preflight requests
-* Add a rule to WAF WebACL in the beginning that allows OPTIONS preflight requests.
+```
+cdk deploy -c CROSS_DOMAIN_ENABLED=true
+```
+
+The architecture is updated this way:
+* CloudFront distribution 1 -> S3 bucket with the HTML of the SPA. Caching enabled. 
+* CloudFront distribution 2 -> API Gateway (regional endpoint). Caching disabled. WAF enabled.
 
 
 ## Security
