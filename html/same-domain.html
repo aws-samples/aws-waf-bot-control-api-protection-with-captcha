@@ -1,0 +1,98 @@
+<html>
+<head><title>What is my IP address?</title></head>
+<script type='text/javascript' src='CAPTCHAURLPLACEHOLDER' defer></script>
+
+<style>
+    .header {
+      background-color: #0066cc;
+      width: "100%";
+      font-family: "Verdana";
+      color: white;
+      font-size: xxx-large;
+      text-align: center;
+      padding-top: 20px;
+      padding-bottom: 20px;
+    }
+    
+    .ui {
+      background-color: #3489dd;
+      width: "100%";
+    }
+     
+    .button {
+      height: 60px;
+    }
+    
+    .buttonContainer {
+      height: 500px;
+      padding-left: 10px;
+      padding-right: 30px;
+    }
+    
+    #container {
+      font-family: 'Verdana';
+      color: white;
+      font-size: large;
+    }
+  </style>
+
+<body>
+
+<div class='header'>What is my IP address?</div>
+<div class="ui">
+  <table>
+    <tr>
+    <td class='buttonContainer'><button class='button' onclick='userAction()'>Lookup IP</button></td>
+    <td><p id='container'></p></td>
+  </tr>
+  </table>
+</div>
+
+<script>
+    const apiURL = 'APIURLPLACDHOLDER';
+
+    function showMyCaptcha() {
+        const container = document.getElementById('container');
+        AwsWafCaptcha.renderCaptcha(container, {
+          apiKey: 'APIKEYPLACEHOLDER',
+            onSuccess: captchaExampleSuccessFunction,
+            onError: captchaExampleErrorFunction,
+        });
+    }
+    
+    function userAction() {
+      const container = document.getElementById('container');
+      container.innerHTML = '';
+      AwsWafIntegration.fetch(apiURL).then(response => {
+        if (response.status == 405) {
+            showMyCaptcha();
+        } 
+        else {
+          response.json().then(myJson => { renderResponse(myJson) });
+        }
+      });
+    }
+    
+    function captchaExampleSuccessFunction() {
+      const container = document.getElementById('container');
+      container.innerHTML = '';
+      AwsWafIntegration.fetch(apiURL).then(response => {
+        response.json().then(myJson => { renderResponse(myJson) });
+      });
+    }
+
+    function captchaExampleErrorFunction(error) {
+       console.log(error);
+    }
+
+    function renderResponse(json) {
+        if (json) {
+            container.innerHTML = 'Your IP address is ' + json.ip + ', and you are coming from ' + json.country + '. The request id associated with this api call is ' + json.requestid;
+        } else {
+            container.innerHTML = "The request resulted in error";
+        }
+    }
+</script>
+
+</body>
+</html>

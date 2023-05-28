@@ -7,13 +7,11 @@ exports.handler = async function(event) {
       switch (event.RequestType) {
         case "Create":
           const apikeys = await wafv2.listAPIKeys({ Scope: 'CLOUDFRONT' }).promise();
-          console.log(apikeys);
+
           // todo chaange code when sdk is fixed
           var applicationIntegrationURL = apikeys.ApplicationIntegrationURL;
-          if (!applicationIntegrationURL.includes("captcha-sdk")) {
-            applicationIntegrationURL = applicationIntegrationURL.replace("sdk", "captcha-sdk")
-          }
-          applicationIntegrationURL = applicationIntegrationURL + "_/";
+          console.log(applicationIntegrationURL);
+          applicationIntegrationURL = applicationIntegrationURL + "_/jsapi.js";
           
           var keyFound = false;
           var selectedKey;

@@ -6,7 +6,8 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
 
 export interface helperCustomResourceProps {
-  Domain: string
+  Domain: string,
+  ID: string
 }
 
 export class helperCustomResource extends Construct {
@@ -47,7 +48,7 @@ export class helperCustomResource extends Construct {
     });
 // todo update runtime
     const onEvent = new lambda.SingletonFunction(this, 'crSingleton', {
-      uuid: 'f7d4d730-dhd1-22hge8-9c2d-fnbebdjdh',     
+      uuid: props.ID,     
       runtime: lambda.Runtime.NODEJS_16_X,
       handler: "index.handler",
       timeout: cdk.Duration.seconds(60),
