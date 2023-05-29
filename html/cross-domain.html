@@ -65,7 +65,7 @@
       container.innerHTML = '';
 
       AwsWafIntegration.getToken().then((token) => {
-        fetch(apiURL, {headers: { 'x-aws-waf-token': token}}).then(response => {
+        AwsWafIntegration.fetch(apiURL, {headers: { 'x-aws-waf-token': token}}).then(response => {
           if (response.status == 405) {
               showCaptcha();
           } 
@@ -80,7 +80,7 @@
       const container = document.getElementById('container');
       container.innerHTML = '';
       AwsWafIntegration.getToken().then((token) => {
-        fetch(apiURL, {headers: { 'x-aws-waf-token': token}}).then(response => {
+        AwsWafIntegration.fetch(apiURL, {headers: { 'x-aws-waf-token': token}}).then(response => {
           response.json().then(myJson => { renderResponse(myJson) });
         });
       });

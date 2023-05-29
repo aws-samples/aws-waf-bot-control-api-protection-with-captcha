@@ -8,10 +8,9 @@ exports.handler = async function(event) {
         case "Create":
           const apikeys = await wafv2.listAPIKeys({ Scope: 'CLOUDFRONT' }).promise();
 
-          // todo chaange code when sdk is fixed
           var applicationIntegrationURL = apikeys.ApplicationIntegrationURL;
           console.log(applicationIntegrationURL);
-          applicationIntegrationURL = applicationIntegrationURL + "_/jsapi.js";
+          applicationIntegrationURL = applicationIntegrationURL + "jsapi.js";
           
           var keyFound = false;
           var selectedKey;

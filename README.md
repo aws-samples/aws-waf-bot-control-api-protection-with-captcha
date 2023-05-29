@@ -5,7 +5,7 @@
 Steps to deploy the solution:
 
 ```
-git clone https://github.com/achrafsouk/spa-cross-domain-bot-control.git
+git clone https://github.com/aws-samples/aws-waf-bot-control-api-protection-with-captcha.git
 cd spa-cross-domain-bot-control
 npm install
 npm run build

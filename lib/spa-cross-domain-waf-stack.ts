@@ -16,7 +16,7 @@ const wafDefaultRules = [
         Rule: {
             name: "AWSManagedRulesBotControlRuleSet",
             priority: 1,
-            overrideAction: { none: {} }, // todo count IP vilumetric in both rules
+            overrideAction: { none: {} }, 
             statement: {
                 managedRuleGroupStatement: {
                     vendorName: "AWS",
@@ -37,6 +37,14 @@ const wafDefaultRules = [
                     managedRuleGroupConfigs: [
                         {
                             awsManagedRulesBotControlRuleSet: { inspectionLevel: "TARGETED" }
+                        }
+                    ],
+                    ruleActionOverrides: [
+                        {
+                            actionToUse : {
+                                captcha: {}
+                            },
+                            name : 'TGT_VolumetricIpTokenAbsent'
                         }
                     ]
                 },
@@ -131,6 +139,14 @@ const wafCORSRules = [
                         {
                             awsManagedRulesBotControlRuleSet: { inspectionLevel: "TARGETED" }
                         }
+                    ],
+                    ruleActionOverrides: [
+                        {
+                            actionToUse : {
+                                captcha: {}
+                            },
+                            name : 'TGT_VolumetricIpTokenAbsent'
+                        }
                     ]
                 },
             },
@@ -203,46 +219,20 @@ export class SpaCrossDomainWafStack extends cdk.Stack {
     super(scope, id, props);
 
         const CROSS_DOMAIN_ENABLED = this.node.tryGetContext('CROSS_DOMAIN_ENABLED') || 'false';
+        var html;
+        var api;
+        var cloudfrontDistributionAPI;
+        var cloudfrontDistributionHTML;
+        var webACL;
 
-        var html = '';
-        if (CROSS_DOMAIN_ENABLED === 'false') {
-            html = fs.readFileSync('html/same-domain.html', 'utf8');
-        } else {
-            // TODO cross domain url with native AwsWafIntegration does not work
-            html = fs.readFileSync('html/cross-domain.html', 'utf8');
-        }
 
         const path = require('node:path');
         const apiFunction = new lambda.Function(this, 'lamdaFunction', {
-            runtime: lambda.Runtime.NODEJS_16_X,
+            runtime: lambda.Runtime.NODEJS_18_X,
             handler: 'index.handler',
             code: lambda.Code.fromAsset(path.join(__dirname, '../lambda/origin')),
             architecture: lambda.Architecture.X86_64,
         });
-        var apiConfig : any= { //todo interface any
-            endpointConfiguration: {
-                types: [apiGateway.EndpointType.REGIONAL]
-            }
-        }
-        if (CROSS_DOMAIN_ENABLED === 'true') {
-            apiConfig.defaultCorsPreflightOptions = {
-                allowHeaders: [
-                  'X-Aws-Waf-Token'
-                ],
-                allowMethods: ['OPTIONS', 'GET'],
-                allowCredentials: true, //todo 
-                allowOrigins: apiGateway.Cors.ALL_ORIGINS, //todo
-              }
-        }
-
-        const api = new apiGateway.RestApi(this, "api", apiConfig);
-
-        const myip = api.root.addResource('api');
-        myip.addMethod(
-            'GET',
-            new apiGateway.LambdaIntegration(apiFunction, {proxy: true}),
-        );
-
         const spaBucket = new s3.Bucket(this, 'spa-bucket', {
             blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
             encryption: s3.BucketEncryption.S3_MANAGED,
@@ -250,56 +240,101 @@ export class SpaCrossDomainWafStack extends cdk.Stack {
             removalPolicy: cdk.RemovalPolicy.DESTROY,
             autoDeleteObjects: true,
         });
-        // todo
-        var wafRules ;
-        if (CROSS_DOMAIN_ENABLED === 'true') {
-            wafRules = wafCORSRules;
-        } else {
-            wafRules = wafDefaultRules;
-        }
 
 
-        var webACLConfig : any= {
-            name: 'webACL',
-            defaultAction: { allow: {} },
-            scope: "CLOUDFRONT",
-            visibilityConfig: {
-                cloudWatchMetricsEnabled: true,
-                metricName: "webACL",
-                sampledRequestsEnabled: false,
-            },
-            rules: wafRules.map((wafRule) => wafRule.Rule),
-        };
-        var webACL; 
-        var mainCloudfrontDistributionConfig : any = {
-            defaultRootObject: 'index.html',
-            comment: 'intelligent waf protection with cross domain SPA',
-            minimumProtocolVersion: cloudfront.SecurityPolicyProtocol.TLS_V1_2_2018,
-            defaultBehavior: {
-                origin: new origins.S3Origin(spaBucket),
-                viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-                cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED //TODO change for CACHING_OPTIMIZED,
-            }
-        };
-        var cloudfrontDistributionAPI;
-        var cloudfrontDistributionHTML;
         if (CROSS_DOMAIN_ENABLED === 'false') {
-            webACL = new waf.CfnWebACL(this, "webACL", webACLConfig);
-            mainCloudfrontDistributionConfig.additionalBehaviors = {
-                'api/*': {
-                    origin: new origins.RestApiOrigin(api),
-                    viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.HTTPS_ONLY,
-                    cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
-                    originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER
-                }
-            }
-            mainCloudfrontDistributionConfig.webAclId = webACL.attrArn
-            cloudfrontDistributionHTML = new cloudfront.Distribution(this, 'Distribution', mainCloudfrontDistributionConfig);
+            html = fs.readFileSync('html/same-domain.html', 'utf8');
             html = html.replace('APIURLPLACDHOLDER', 'api/');
+            api = new apiGateway.RestApi(this, "api", {
+                endpointConfiguration: {
+                    types: [apiGateway.EndpointType.REGIONAL]
+                }
+            });
+            webACL = new waf.CfnWebACL(this, "webACL", {
+                name: 'webACL',
+                defaultAction: { allow: {} },
+                scope: "CLOUDFRONT",
+                visibilityConfig: {
+                    cloudWatchMetricsEnabled: true,
+                    metricName: "webACL",
+                    sampledRequestsEnabled: false,
+                },
+                rules: wafDefaultRules.map((wafRule) => wafRule.Rule),
+            });
+            cloudfrontDistributionHTML = new cloudfront.Distribution(this, 'Distribution', {
+                defaultRootObject: 'index.html',
+                comment: 'intelligent waf protection with cross domain SPA',
+                minimumProtocolVersion: cloudfront.SecurityPolicyProtocol.TLS_V1_2_2018,
+                defaultBehavior: {
+                    origin: new origins.S3Origin(spaBucket),
+                    viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+                    cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED 
+                },
+                additionalBehaviors: {
+                    'api/*': {
+                        origin: new origins.RestApiOrigin(api),
+                        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.HTTPS_ONLY,
+                        cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
+                        originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER
+                    }
+                },
+                webAclId: webACL.attrArn
+            });
+
+
         } else {
-            cloudfrontDistributionHTML = new cloudfront.Distribution(this, 'Distribution', mainCloudfrontDistributionConfig);
-            webACLConfig.tokenDomains = [cloudfrontDistributionHTML.domainName];
-            webACL = new waf.CfnWebACL(this, "webACL", webACLConfig);
+            html = fs.readFileSync('html/cross-domain.html', 'utf8');
+
+            cloudfrontDistributionHTML = new cloudfront.Distribution(this, 'Distribution', {
+                defaultRootObject: 'index.html',
+                comment: 'intelligent waf protection with cross domain SPA',
+                minimumProtocolVersion: cloudfront.SecurityPolicyProtocol.TLS_V1_2_2018,
+                defaultBehavior: {
+                    origin: new origins.S3Origin(spaBucket),
+                    viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+                    cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED
+                },
+
+            });
+
+            api = new apiGateway.RestApi(this, "api", {
+                endpointConfiguration: {
+                    types: [apiGateway.EndpointType.REGIONAL]
+                },
+                defaultCorsPreflightOptions: {
+                    allowHeaders: [
+                      'X-Aws-Waf-Token'
+                    ],
+                    allowMethods: ['OPTIONS', 'GET'],
+                    allowOrigins: [`https://${cloudfrontDistributionHTML.distributionDomainName}`]
+                  }
+            });
+            
+            webACL = new waf.CfnWebACL(this, "webACL", {
+                name: 'webACL',
+                defaultAction: { allow: {} },
+                scope: "CLOUDFRONT",
+                visibilityConfig: {
+                    cloudWatchMetricsEnabled: true,
+                    metricName: "webACL",
+                    sampledRequestsEnabled: false,
+                },
+                rules: wafCORSRules.map((wafRule) => wafRule.Rule),
+                tokenDomains: [cloudfrontDistributionHTML.domainName]
+            });
+
+            const responseHeaderPolicy = new cloudfront.ResponseHeadersPolicy(this, `ResponseHeadersPolicy${this.node.addr}`, {
+                responseHeadersPolicyName: 'CORSResponsePolicy',
+                corsBehavior: {
+                  accessControlAllowCredentials: false,
+                  accessControlAllowHeaders: ['X-Aws-Waf-Token'],
+                  accessControlAllowMethods: ['GET','OPTIONS'],
+                  accessControlAllowOrigins: [`https://${cloudfrontDistributionHTML.distributionDomainName}`],
+                  accessControlMaxAge: cdk.Duration.seconds(600),
+                  originOverride: true,
+                }
+              });  
+
             cloudfrontDistributionAPI = new cloudfront.Distribution(this, 'DistributionAPI', {
                 comment: 'intelligent waf protection with cross domain SPA - API',
                 minimumProtocolVersion: cloudfront.SecurityPolicyProtocol.TLS_V1_2_2018,
@@ -307,16 +342,21 @@ export class SpaCrossDomainWafStack extends cdk.Stack {
                     origin: new origins.RestApiOrigin(api),
                     viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.HTTPS_ONLY,
                     allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS ,
-                    // cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD_OPTIONS, todo cache options
                     cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
                     originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
-                    responseHeadersPolicy: cloudfront.ResponseHeadersPolicy.CORS_ALLOW_ALL_ORIGINS_WITH_PREFLIGHT //todo
+                    responseHeadersPolicy: responseHeaderPolicy
                 },
                 webAclId: webACL.attrArn
             });
             html = html.replace('APIURLPLACDHOLDER', `https://${cloudfrontDistributionAPI.distributionDomainName}/api/`);
 
-        }
+        } 
+
+        const myip = api.root.addResource('api');
+        myip.addMethod(
+            'GET',
+            new apiGateway.LambdaIntegration(apiFunction, {proxy: true}),
+        );
 
         const wafSDKCalls = new helperCustomResource(this, 'customResource', {
             Domain: cloudfrontDistributionHTML.distributionDomainName,
