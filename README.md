@@ -6,7 +6,7 @@ Steps to deploy the solution:
 
 ```
 git clone https://github.com/aws-samples/aws-waf-bot-control-api-protection-with-captcha.git
-cd spa-cross-domain-bot-control
+cd aws-waf-bot-control-api-protection-with-captcha-main
 npm install
 npm run build
 cdk bootstrap
