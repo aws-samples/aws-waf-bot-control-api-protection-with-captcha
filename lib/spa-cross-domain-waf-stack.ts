@@ -45,7 +45,13 @@ const wafDefaultRules = [
                                 captcha: {}
                             },
                             name : 'TGT_VolumetricIpTokenAbsent'
-                        }
+                        },
+                        {
+                            actionToUse : {
+                                captcha: {}
+                            },
+                            name : 'SignalNonBrowserUserAgent'
+                        }         
                     ]
                 },
             },
@@ -146,6 +152,12 @@ const wafCORSRules = [
                                 captcha: {}
                             },
                             name : 'TGT_VolumetricIpTokenAbsent'
+                        },
+                        {
+                            actionToUse : {
+                                captcha: {}
+                            },
+                            name : 'SignalNonBrowserUserAgent'
                         }
                     ]
                 },
