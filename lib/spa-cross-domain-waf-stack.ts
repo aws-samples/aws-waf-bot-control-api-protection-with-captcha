@@ -361,7 +361,9 @@ export class SpaCrossDomainWafStack extends cdk.Stack {
                 webAclId: webACL.attrArn
             });
             html = html.replace('APIURLPLACDHOLDER', `https://${cloudfrontDistributionAPI.distributionDomainName}/api/`);
-
+            new cdk.CfnOutput(this, 'API URL', {
+                value: `https://${cloudfrontDistributionAPI.distributionDomainName}/api/`
+            });
         } 
 
         const myip = api.root.addResource('api');
