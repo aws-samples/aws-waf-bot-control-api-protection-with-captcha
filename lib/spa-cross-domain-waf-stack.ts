@@ -381,6 +381,7 @@ export class SpaCrossDomainWafStack extends cdk.Stack {
         new s3deploy.BucketDeployment(this, 'DeployWebsite', {
             sources: [s3deploy.Source.data('index.html', html)],
             destinationBucket: spaBucket,
+            cacheControl: [s3deploy.CacheControl.fromString('max-age=5,stale-while-revalidate=3600')],
         });
         new cdk.CfnOutput(this, 'S3 bucket hosting SPA HTML', { value: spaBucket.bucketName });
         new cdk.CfnOutput(this, 'SPA URL', {
