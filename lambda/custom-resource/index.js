@@ -34,7 +34,7 @@ exports.handler = async function(event) {
           return { 'Data': { 'APIKey': selectedKey, 'CaptchaIntegrationURL': applicationIntegrationURL } } 
         case "Update":
         case "Delete":
-          return { 'PhysicalResourceId': event.PhysicalResourceId }
+          return { 'PhysicalResourceId': event.PhysicalResourceId } // WHEN key deletion is available in WAFv2 API, modify this section.
       }
 
   } catch (error) {
