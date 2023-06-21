@@ -1,8 +1,18 @@
-# SPA with cross domain API protection using AWS WAF Advanced threat mitigation
+# Using AWS WAF intelligent threat mitigations with cross-origin API access
 
-## Working SPA with same domain
+AWS WAF offers advanced features for filtering undesired web application traffic, such as Bot Control and Fraud Control. These intelligent threat mitigations include techniques such as client-side interrogations using javascript challenges or CAPTCHA, and client-side behavioral analysis. 
 
-Steps to deploy the solution:
+Implementing these techniques on a web page with a same-origin access is straight forward. When a cross-domain access is needed, for example when APIs are exposed on a different domain that the webpage itself, configuring AWS WAF’s intelligent threat mitigations require additional steps. With this solution you will learn about these additional steps, using a Single Page Application (SPA) example. The SPA  displays the country and IP information of the viewer using an API.
+
+When the solution is deployed, first test the legitimate user workflow by clicking on the button. To test the CAPTCHA workflow, change the user agent of your browser to a random value which will be picked as suspicious signal by the Bot Control.
+
+You can read the full blog here TODO.
+
+## Scenario 1: SPA example with same-origin access
+
+<img src="same-origin.png" width="900">
+
+Deploy the solution in us-east-1, by following the next steps in your CLI:
 
 ```
 git clone https://github.com/aws-samples/aws-waf-bot-control-api-protection-with-captcha.git
@@ -13,24 +23,15 @@ cdk bootstrap
 cdk deploy 
 ```
 
-It deploys a CloudFront distribution, associated to a WAF WebACL configured with Bot Control, and having  two origins:
-* /api/* cache behavior -> API Gateway (regional endpoint). Caching disabled.
-* default cache behavior -> S3 bucket with the HTML of the SPA. Caching enabled.
+## Scenario 2: SPA example with cross-origin access
 
-The SPA HTML includes the Bot Control SDK, and a button that makes a call to an API. If WAF detects bad signals on the API call, the SPA triggers a CAPTCHA in the HTML. To test this behavior, change the user agent header in the browser.
+<img src="cross-origin.png" width="900">
 
-## Working SPA with cross domain
-
-Deploy the update the solution using this command line:
+Update the deployed infrastructure using this command line:
 
 ```
 cdk deploy -c CROSS_DOMAIN_ENABLED=true
 ```
-
-The architecture is updated this way:
-* CloudFront distribution 1 -> S3 bucket with the HTML of the SPA. Caching enabled. 
-* CloudFront distribution 2 -> API Gateway (regional endpoint). Caching disabled. WAF enabled.
-
 
 ## Security
 
