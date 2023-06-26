@@ -51,6 +51,12 @@ const wafDefaultRules = [
                                 captcha: {}
                             },
                             name : 'SignalNonBrowserUserAgent'
+                        },
+                        {
+                            actionToUse : {
+                                captcha: {}
+                            },
+                            name : 'CategoryHttpLibrary'
                         }         
                     ]
                 },
@@ -158,7 +164,13 @@ const wafCORSRules = [
                                 captcha: {}
                             },
                             name : 'SignalNonBrowserUserAgent'
-                        }
+                        },
+                        {
+                            actionToUse : {
+                                captcha: {}
+                            },
+                            name : 'CategoryHttpLibrary'
+                        }    
                     ]
                 },
             },
@@ -253,10 +265,9 @@ export class SpaCrossDomainWafStack extends cdk.Stack {
             autoDeleteObjects: true,
         });
         
-        html = fs.readFileSync('html/same-domain.html', 'utf8');
+        html = fs.readFileSync('html/spa.html', 'utf8');
 
         if (CROSS_DOMAIN_ENABLED === 'false') {
-            //
             html = html.replace('APIURLPLACDHOLDER', 'api/');
             api = new apiGateway.RestApi(this, "api", {
                 endpointConfiguration: {
@@ -296,8 +307,6 @@ export class SpaCrossDomainWafStack extends cdk.Stack {
 
 
         } else {
-            //html = fs.readFileSync('html/cross-domain.html', 'utf8');
-
             cloudfrontDistributionHTML = new cloudfront.Distribution(this, 'Distribution', {
                 defaultRootObject: 'index.html',
                 comment: 'intelligent waf protection with cross domain SPA',
