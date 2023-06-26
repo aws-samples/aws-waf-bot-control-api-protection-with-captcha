@@ -55,15 +55,15 @@
         const container = document.getElementById('container');
         AwsWafCaptcha.renderCaptcha(container, {
           apiKey: 'APIKEYPLACEHOLDER',
-            onSuccess: captchaExampleSuccessFunction,
-            onError: captchaExampleErrorFunction,
+            onSuccess: successFunction,
+            onError: errorFunction,
         });
     }
     
     function userAction() {
       const container = document.getElementById('container');
       container.innerHTML = '';
-      AwsWafIntegration.fetch(apiURL).then(response => {
+      AwsWafIntegration.fetch(apiURL,{}).then(response => {
         if (response.status == 405) {
             showMyCaptcha();
         } 
@@ -73,15 +73,15 @@
       });
     }
     
-    function captchaExampleSuccessFunction() {
+    function successFunction() {
       const container = document.getElementById('container');
       container.innerHTML = '';
-      AwsWafIntegration.fetch(apiURL).then(response => {
+      AwsWafIntegration.fetch(apiURL, {}).then(response => {
         response.json().then(myJson => { renderResponse(myJson) });
       });
     }
 
-    function captchaExampleErrorFunction(error) {
+    function errorFunction(error) {
        console.log(error);
     }
 
