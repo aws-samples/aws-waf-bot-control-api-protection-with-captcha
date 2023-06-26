@@ -252,10 +252,11 @@ export class SpaCrossDomainWafStack extends cdk.Stack {
             removalPolicy: cdk.RemovalPolicy.DESTROY,
             autoDeleteObjects: true,
         });
-
+        
+        html = fs.readFileSync('html/same-domain.html', 'utf8');
 
         if (CROSS_DOMAIN_ENABLED === 'false') {
-            html = fs.readFileSync('html/same-domain.html', 'utf8');
+            //
             html = html.replace('APIURLPLACDHOLDER', 'api/');
             api = new apiGateway.RestApi(this, "api", {
                 endpointConfiguration: {
@@ -295,7 +296,7 @@ export class SpaCrossDomainWafStack extends cdk.Stack {
 
 
         } else {
-            html = fs.readFileSync('html/cross-domain.html', 'utf8');
+            //html = fs.readFileSync('html/cross-domain.html', 'utf8');
 
             cloudfrontDistributionHTML = new cloudfront.Distribution(this, 'Distribution', {
                 defaultRootObject: 'index.html',
