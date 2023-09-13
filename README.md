@@ -6,7 +6,7 @@ Implementing these techniques on a web page with a same-origin access is straigh
 
 When the solution is deployed, first test the legitimate user workflow by clicking on the button. To test the CAPTCHA workflow, change the user agent of your browser to a random value which will be picked as suspicious signal by the Bot Control.
 
-You can read the full blog here TODO.
+You can read the [full blog here](https://aws.amazon.com/blogs/networking-and-content-delivery/using-aws-waf-intelligent-threat-mitigations-with-cross-origin-api-access/).
 
 ## Scenario 1: SPA example with same-origin access
 
