@@ -24,7 +24,7 @@ export class helperCustomResource extends Construct {
             resources: [
               "*",
             ],
-            actions: ["wafv2:ListAPIKeys", "wafv2:CreateAPIKey"], 
+            actions: ["wafv2:ListAPIKeys", "wafv2:CreateAPIKey", "wafv2:DeleteAPIKey"], 
           }),
         ],
       });
