@@ -5,18 +5,20 @@ exports.handler = async function(event) {
   try {
       switch (event.RequestType) {
         case "Create":
-          var selectedKey = await getAPIKey(event.ResourceProperties.Domain);
+          var keyinfo = await getAPIKeyInfo(event.ResourceProperties.Domain);
+          selectedKey = keyinfo.selectedKey;
 
           if (!selectedKey) {
             const response = await wafv2.createAPIKey({ TokenDomains: [event.ResourceProperties.Domain], Scope: 'CLOUDFRONT'}).promise();
             selectedKey = response.APIKey;
             console.log("new key created", selectedKey);
           }    
-          return { 'Data': { 'APIKey': selectedKey, 'CaptchaIntegrationURL': applicationIntegrationURL } } 
+          return { 'Data': { 'APIKey': selectedKey, 'CaptchaIntegrationURL': keyinfo.applicationIntegrationURL } } 
         case "Update":
           return { 'PhysicalResourceId': event.PhysicalResourceId }
         case "Delete":
-          var selectedKey = await getAPIKey(event.ResourceProperties.Domain);
+          var keyinfo = await getAPIKeyInfo(event.ResourceProperties.Domain);
+          selectedKey = keyinfo.selectedKey;
       
           if (selectedKey) {
             const response = await wafv2.deleteAPIKey({ APIKey: selectedKey, Scope: 'CLOUDFRONT'}).promise();
@@ -34,7 +36,7 @@ exports.handler = async function(event) {
 };
 
 
-async function getAPIKey(CFdomain) {
+async function getAPIKeyInfo(CFdomain) {
 
 const apikeys = await wafv2.listAPIKeys({ Scope: 'CLOUDFRONT' }).promise();
 
@@ -56,5 +58,5 @@ const apikeys = await wafv2.listAPIKeys({ Scope: 'CLOUDFRONT' }).promise();
     }
   }
 
-  return selectedKey;
+  return {'selectedKey':selectedKey, 'applicationIntegrationURL': applicationIntegrationURL};
 }
