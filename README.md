@@ -16,7 +16,7 @@ Deploy the solution in us-east-1, by following the next steps in your CLI:
 
 ```
 git clone https://github.com/aws-samples/aws-waf-bot-control-api-protection-with-captcha.git
-cd aws-waf-bot-control-api-protection-with-captcha-main
+cd aws-waf-bot-control-api-protection-with-captcha
 npm install
 npm run build
 cdk bootstrap
